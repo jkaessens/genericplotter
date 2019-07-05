@@ -1,0 +1,7 @@
+/target
+**/*.rs.bk
+.idea
+genericplotter.iml
+*.genome
+*.png
+Cargo.lock
