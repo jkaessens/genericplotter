@@ -128,7 +128,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
               matches.value_of("xdesc").unwrap_or("Z0"),
               matches.value_of("ydesc").unwrap_or("Z1"),
               matches.value_of("title").unwrap_or("IBD/IBS Plot"),
-              matches.value_of("source").unwrap(),
+              matches.value_of("target").unwrap(),
               (
                   matches.value_of("xsize").unwrap_or("800").parse::<u32>().unwrap(),
                   matches.value_of("xsize").unwrap_or("600").parse::<u32>().unwrap()
