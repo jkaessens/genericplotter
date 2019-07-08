@@ -9,9 +9,13 @@ use std::cmp::max;
 
 use plotters::prelude::*;
 use clap::{App, Arg};
+use crate::binnedvector::FixedBinnedVector;
 
+mod binnedvector;
 
 const BUFFER_SIZE :usize = 1024*1024;
+
+const FONT_NAME: &'static str = "Source Code Pro";
 
 // Parses a [0..1] coordinate pair from a line of text
 fn parse_line(line: &str, xcol: usize, ycol: usize) -> (f32, f32) {
@@ -34,17 +38,21 @@ fn draw_plot(source: &str,
     // Set up canvas
     let bitmap = BitMapBackend::new(target, size).into_drawing_area();
     bitmap.fill(&White)?;
+    let areas = bitmap.split_by_breakpoints([(size.0 * 7/8) as i32], [(size.1 * 1/8) as i32]);
+
+    let mut area_x_ctx = ChartBuilder::on(&areas[0]).build_ranged(0u32..100u32, 0f32..1f32)?;
+    let mut area_y_ctx = ChartBuilder::on(&areas[3]).build_ranged(0f32..1f32, 0u32..100u32)?;
 
     // Set up caption and ranges
-    let mut chart = ChartBuilder::on(&bitmap)
-        .caption(title, ("Open Sans", 35).into_font())
+    let mut chart = ChartBuilder::on(&areas[2])
+//        .caption(title, (FONT_NAME, 35).into_font())
         .margin(10)
         .x_label_area_size(35)
         .y_label_area_size(50)
         .build_ranged(0f32..1f32, 0f32..1f32)?;
 
     chart.configure_mesh()
-        .axis_desc_style(("Open Sans", 25).into_font())
+//        .axis_desc_style((FONT_NAME, 25).into_font())
         .x_desc(xdescr)
         .y_desc(ydescr)
         .draw()?;
@@ -52,16 +60,36 @@ fn draw_plot(source: &str,
     // Read file line-by-line, skip the first one
     let iter = reader.lines().skip(1);
 
+    let mut x_hist = FixedBinnedVector::new(0f32, 1f32, 100);
+    let mut y_hist = FixedBinnedVector::new(0f32, 1f32, 100);
+
     // Make a line iterator to map each line to a (x, y) pair
     let point_iter = iter.map(
         |line| {
             let pair = parse_line(&(line.unwrap()), xcol, ycol);
+            x_hist.insert(pair.0);
+            y_hist.insert(pair.1);
             Circle::new(pair, 2, Blue.filled())
         });
 
-    // Draw series
+    // Draw scatter plot
     chart.draw_series(point_iter)?;
 
+    let x_hist_norm = x_hist.normalize();
+    let y_hist_norm = y_hist.normalize();
+
+    let x_hist_iter = Histogram::vertical(&area_x_ctx)
+        .style(Green.filled())
+        .margin(0)
+        .data(x_hist_norm.iter().enumerate().map(|(x,y)| (x as u32,*y)));
+
+    let y_hist_iter = Histogram::horizental(&area_y_ctx)
+        .style(Green.filled())
+        .margin(0)
+        .data(y_hist_norm.iter().enumerate().map(|(x,y)| (x as u32,*y)));
+
+    area_x_ctx.draw_series(x_hist_iter)?;
+    area_y_ctx.draw_series(y_hist_iter)?;
     Ok(())
 }
 
