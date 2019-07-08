@@ -1,6 +1,6 @@
 [package]
 name = "genericplotter"
-version = "0.1.0"
+version = "0.2.0"
 description = "A generic scatterplot generator"
 authors = ["Jan Christian Kaessens <j.kaessens@ikmb.uni-kiel.de>"]
 edition = "2018"

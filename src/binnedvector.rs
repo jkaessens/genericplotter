@@ -17,7 +17,7 @@ impl FixedBinnedVector {
     }
 
     pub fn insert(&mut self, val: f32) {
-        let bin = if val < self.min {
+        let mut bin = if val < self.min {
             0
         } else if val > self.max {
             self.elements.len() - 1
@@ -25,15 +25,11 @@ impl FixedBinnedVector {
             ((val-self.min) / self.bin_size) as usize
         };
 
+        if bin >= self.elements.len() {
+            bin = self.elements.len() - 1;
+        }
+
         self.elements[bin] += 1;
-    }
-
-    pub fn bins(&self) -> std::slice::Iter<usize> {
-        self.elements.iter()
-    }
-
-    pub fn bin_count(&self) -> usize {
-        self.elements.len()
     }
 
     pub fn normalize(self) -> Vec<f32> {

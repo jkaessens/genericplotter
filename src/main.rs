@@ -14,8 +14,8 @@ use crate::binnedvector::FixedBinnedVector;
 mod binnedvector;
 
 const BUFFER_SIZE :usize = 1024*1024;
-
-const FONT_NAME: &'static str = "Source Code Pro";
+const BIN_COUNT :usize = 1000;
+const HISTOGRAM_SIZE :f32 = 0.125;
 
 // Parses a [0..1] coordinate pair from a line of text
 fn parse_line(line: &str, xcol: usize, ycol: usize) -> (f32, f32) {
@@ -31,28 +31,32 @@ fn parse_line(line: &str, xcol: usize, ycol: usize) -> (f32, f32) {
 fn draw_plot(source: &str,
              xcol: usize, ycol: usize,
              xdescr: &str, ydescr: &str,
-             title: &str, target: &str, size: (u32, u32)) -> Result<(), Box<dyn std::error::Error>> {
+             target: &str, size: (u32, u32)) -> Result<(), Box<dyn std::error::Error>> {
 
     let reader = BufReader::with_capacity(BUFFER_SIZE,File::open(source)?);
 
     // Set up canvas
     let bitmap = BitMapBackend::new(target, size).into_drawing_area();
     bitmap.fill(&White)?;
-    let areas = bitmap.split_by_breakpoints([(size.0 * 7/8) as i32], [(size.1 * 1/8) as i32]);
+    let areas = bitmap.split_by_breakpoints([(size.0 as f32 * (1f32-HISTOGRAM_SIZE)) as i32], [(size.1 as f32* HISTOGRAM_SIZE) as i32]);
 
-    let mut area_x_ctx = ChartBuilder::on(&areas[0]).build_ranged(0u32..100u32, 0f32..1f32)?;
-    let mut area_y_ctx = ChartBuilder::on(&areas[3]).build_ranged(0f32..1f32, 0u32..100u32)?;
+    let mut area_x_ctx = ChartBuilder::on(&areas[0])
+        .y_label_area_size(50)
+        .margin(10)
+        .build_ranged(0u32..(BIN_COUNT as u32), 0f32..1f32)?;
+    let mut area_y_ctx = ChartBuilder::on(&areas[3])
+        .x_label_area_size(35)
+        .margin(10)
+        .build_ranged(0f32..1f32, 0u32..(BIN_COUNT as u32))?;
 
     // Set up caption and ranges
     let mut chart = ChartBuilder::on(&areas[2])
-//        .caption(title, (FONT_NAME, 35).into_font())
         .margin(10)
         .x_label_area_size(35)
         .y_label_area_size(50)
         .build_ranged(0f32..1f32, 0f32..1f32)?;
 
     chart.configure_mesh()
-//        .axis_desc_style((FONT_NAME, 25).into_font())
         .x_desc(xdescr)
         .y_desc(ydescr)
         .draw()?;
@@ -60,8 +64,8 @@ fn draw_plot(source: &str,
     // Read file line-by-line, skip the first one
     let iter = reader.lines().skip(1);
 
-    let mut x_hist = FixedBinnedVector::new(0f32, 1f32, 100);
-    let mut y_hist = FixedBinnedVector::new(0f32, 1f32, 100);
+    let mut x_hist = FixedBinnedVector::new(0f32, 1f32, BIN_COUNT);
+    let mut y_hist = FixedBinnedVector::new(0f32, 1f32, BIN_COUNT);
 
     // Make a line iterator to map each line to a (x, y) pair
     let point_iter = iter.map(
@@ -79,12 +83,12 @@ fn draw_plot(source: &str,
     let y_hist_norm = y_hist.normalize();
 
     let x_hist_iter = Histogram::vertical(&area_x_ctx)
-        .style(Green.filled())
+        .style(Red.filled())
         .margin(0)
         .data(x_hist_norm.iter().enumerate().map(|(x,y)| (x as u32,*y)));
 
     let y_hist_iter = Histogram::horizental(&area_y_ctx)
-        .style(Green.filled())
+        .style(Red.filled())
         .margin(0)
         .data(y_hist_norm.iter().enumerate().map(|(x,y)| (x as u32,*y)));
 
@@ -132,11 +136,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .takes_value(true)
             .value_name("COLNAME")
             .help("Axis description for Y axis"))
-        .arg(Arg::with_name("title")
-            .long("title")
-            .takes_value(true)
-            .value_name("TITLE")
-            .help("Plot title"))
         .arg(Arg::with_name("xsize")
             .long("xsize")
             .takes_value(true)
@@ -155,10 +154,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
               matches.value_of("y").unwrap_or("7").parse::<usize>().unwrap(),
               matches.value_of("xdesc").unwrap_or("Z0"),
               matches.value_of("ydesc").unwrap_or("Z1"),
-              matches.value_of("title").unwrap_or("IBD/IBS Plot"),
               matches.value_of("target").unwrap(),
               (
                   matches.value_of("xsize").unwrap_or("800").parse::<u32>().unwrap(),
-                  matches.value_of("xsize").unwrap_or("600").parse::<u32>().unwrap()
+                  matches.value_of("xsize").unwrap_or("800").parse::<u32>().unwrap()
               ))
 }
