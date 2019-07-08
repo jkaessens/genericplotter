@@ -10,5 +10,3 @@ edition = "2018"
 [dependencies]
 plotters = "*"
 clap = "*"
-partial_application = "*"
-
