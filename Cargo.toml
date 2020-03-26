@@ -3,7 +3,6 @@ name = "genericplotter"
 version = "0.2.0"
 description = "A generic scatterplot generator"
 authors = ["Jan Christian Kaessens <j.kaessens@ikmb.uni-kiel.de>"]
-edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
