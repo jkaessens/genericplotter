@@ -61,7 +61,7 @@ fn draw_heatmap(
     target: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let bitmap = BitMapBackend::new(target, size).into_drawing_area();
-    bitmap.fill(&White)?;
+    bitmap.fill(&WHITE)?;
 
     let mut chart = ChartBuilder::on(&bitmap)
         .margin(10)
