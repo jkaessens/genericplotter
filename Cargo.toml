@@ -7,5 +7,6 @@ authors = ["Jan Christian Kaessens <j.kaessens@ikmb.uni-kiel.de>"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-plotters = {version="^0.2.12", default_features=false, features=["image_encoder","ttf","line_series"]}
+# plotters = {version="^0.2.12", default_features=false, features=["image_encoder","ttf","line_series"]}
+plotters = {git="https://github.com/38/plotters.git", default_features=false, features=["image_encoder","ttf","line_series"]}
 clap = "2"
