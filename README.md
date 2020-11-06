@@ -24,6 +24,6 @@ OPTIONS:
         --ysize <PIXELS>     Size in pixels (Y axis)
 
 ARGS:
-    <FILE>    Whitespace-separated file with values to plot
+    <FILE>    Whitespace separated file with values to plot
     <FILE>    Plot output image file name (.png)
 ```
